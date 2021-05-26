@@ -1,6 +1,8 @@
 import unittest
 from coins import Coin, CoinStorage
 from mpk_exceptions import Error
+from automat import AutomatMpk
+from automat import Tickets
 
 
 class MyTestCase(unittest.TestCase):
@@ -21,6 +23,16 @@ class MyTestCase(unittest.TestCase):
             storage.add(Coin('100'))
         with self.assertRaises(Error):
             storage.add(100)
+
+    def test_automat_class(self):
+        mpk = AutomatMpk()
+        mpk.add_ticket(Tickets.NORMAL_20)
+        self.assertEqual(mpk.get_price(), 2.8)
+        mpk.add_ticket(Tickets.NORMAL_20)
+        mpk.add_ticket(Tickets.NORMAL_20)
+        self.assertEqual(mpk.get_price(), 8.4)
+        mpk.add_ticket(Tickets.REDUCED_60, 2)
+        self.assertEqual(mpk.get_price(), 13.4)
 
 
 if __name__ == '__main__':
