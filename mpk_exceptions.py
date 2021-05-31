@@ -21,3 +21,9 @@ class NotEnoughMoney(Error):
         super().__init__("Put in more money")
 
 
+class AmountDeducted(Error):
+    """ When there are no suitable coins in the machine. """
+    def __init__(self):
+        super().__init__("Tylko odliczona kwota")
+
+

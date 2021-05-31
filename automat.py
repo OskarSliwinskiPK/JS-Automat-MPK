@@ -1,7 +1,7 @@
 import random
-from mpk_exceptions import NotEnoughMoney
+from mpk_exceptions import NotEnoughMoney, AmountDeducted
 
-from coins import CoinStorage
+from coins import CoinStorage, Coin
 from enum import IntEnum
 
 
@@ -53,26 +53,32 @@ class AutomatMpk(CoinStorage):
         return self._price.__round__(2)
 
     def pay(self, user_coins):
+        self.add_coins(user_coins)
         print("Wrzucono: ", user_coins.balance())
         print('Bilety w koszyku: ', self._cart)
         print(f'Trzeba zapłacić: {self.get_price}')
-        print(self._coins)
         if user_coins.balance() < self.get_price:
             raise NotEnoughMoney
         elif user_coins.balance() == self.get_price:
             print("Perfect!")
+            self._cart = []
+            user_coins.clear()
+            return True, 0
         else:
             change = user_coins.balance() - self.get_price
-            coins = []
+            change_coins = CoinStorage()
             new_coins = sorted(self._coins.items(), reverse=True)
-            coins_ = self.non_zero()
             for coin, amount in new_coins:
                 while change >= coin and amount > 0:
-                    coins.append(coin)
-                    self._coins[coin] -=1
+                    change_coins.add(Coin(coin))
+                    self._coins[coin] -= 1
                     amount -= 1
                     change = (change - coin).__round__(2)
             print(f"Trzeba wydać resztę! {(user_coins.balance() - self.get_price).__round__(2)}")
-            print(f"Monety do zwrócenia: {coins}")
-            print(sum(coins).__round__(2))
-        self._cart = None
+            print(f"Monety do zwrócenia: {change_coins.get_coins}")
+            if change_coins.balance() < (user_coins.balance() - self.get_price):
+                raise AmountDeducted
+            print(change_coins.balance())
+            self._cart = []
+            user_coins.clear()
+            return True, change_coins

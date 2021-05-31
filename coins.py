@@ -30,18 +30,17 @@ class CoinStorage:
 
     def add(self, coin, amount=1):
         if isinstance(coin, Coin):
-            if float(coin.get_value) in self._acceptable_values:
-                for _ in range(amount):
-                    self._coins[float(coin.get_value)] += 1
+            for _ in range(amount):
+                self._coins[float(coin.get_value)] += 1
         else:
             raise CoinAttributeError()
+
+    def clear(self):
+        self._coins = {key: 0 for key in self._acceptable_values}
 
     @property
     def get_coins(self):
         return self._coins
-
-    def non_zero(self):
-        return [coin for coin, amount in self._coins.items() if amount > 0]
 
     def remove(self, coin):
         if isinstance(coin, Coin):
