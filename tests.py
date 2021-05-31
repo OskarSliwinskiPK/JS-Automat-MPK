@@ -7,7 +7,7 @@ from automat import Tickets
 
 class MyTestCase(unittest.TestCase):
     def test_coin_class(self):
-        self.assertEqual(Coin(5).get_value(), 5)
+        self.assertEqual(Coin(5).get_value, 5)
         with self.assertRaises(Error):
             Coin('a')
         with self.assertRaises(Error):

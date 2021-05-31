@@ -17,6 +17,7 @@ class Coin:
             return self._value == other._value
         return False
 
+    @property
     def get_value(self):
         return self._value
 
@@ -27,17 +28,25 @@ class CoinStorage:
     def __init__(self):
         self._coins = {key: 0 for key in self._acceptable_values}
 
-    def add(self, coin):
+    def add(self, coin, amount=1):
         if isinstance(coin, Coin):
-            if coin.get_value() in self._acceptable_values:
-                self._coins[coin.get_value()] += 1
+            if float(coin.get_value) in self._acceptable_values:
+                for _ in range(amount):
+                    self._coins[float(coin.get_value)] += 1
         else:
             raise CoinAttributeError()
 
+    @property
+    def get_coins(self):
+        return self._coins
+
+    def non_zero(self):
+        return [coin for coin, amount in self._coins.items() if amount > 0]
+
     def remove(self, coin):
         if isinstance(coin, Coin):
-            if coin.get_value() in self._acceptable_values:
-                self._coins[coin.get_value()] -= 1
+            if coin.get_value in self._acceptable_values:
+                self._coins[coin.get_value] -= 1
         else:
             raise CoinAttributeError()
 

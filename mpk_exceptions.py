@@ -15,3 +15,9 @@ class CoinAttributeError(Error):
         super().__init__("Only COIN object available")
 
 
+class NotEnoughMoney(Error):
+    """ If someone pay too little. """
+    def __init__(self):
+        super().__init__("Put in more money")
+
+
