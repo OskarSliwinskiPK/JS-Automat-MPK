@@ -38,6 +38,9 @@ class CoinStorage:
     def clear(self):
         self._coins = {key: 0 for key in self._acceptable_values}
 
+    def return_money(self, coins):
+        pass
+
     @property
     def get_coins(self):
         return self._coins
@@ -50,4 +53,4 @@ class CoinStorage:
             raise CoinAttributeError()
 
     def balance(self):
-        return sum([key*value for key, value in self._coins.items()])
+        return sum([key*value for key, value in self._coins.items()]).__round__(2)

@@ -45,6 +45,29 @@ class AutomatMpk(CoinStorage):
         merge_coins = lambda x, y: {k: x.get(k, 0) + y.get(k, 0) for k in set(x)}
         self._coins = merge_coins(self.get_coins, cash.get_coins)
 
+    def return_money(self, coins):
+        copy_user_coins = coins.get_coins
+        coins.clear()
+        return copy_user_coins
+
+    def clear(self):
+        self._cart = []
+
+    @property
+    def tickets(self):
+        result = []
+        for item in self._cart:
+            result.append(item[1])
+        return len(result)
+
+    def coins_returned(self, user_coins):
+        result = []
+        for item, amount in user_coins.get_coins.items():
+            if amount > 0:
+                result.append(f'{item}x{amount}')
+                self._coins[item] -= amount
+        return result
+
     @property
     def get_price(self):
         self._price = 0.0
@@ -62,7 +85,6 @@ class AutomatMpk(CoinStorage):
         elif user_coins.balance() == self.get_price:
             print("Perfect!")
             self._cart = []
-            user_coins.clear()
             return True, 0
         else:
             change = user_coins.balance() - self.get_price
@@ -79,6 +101,4 @@ class AutomatMpk(CoinStorage):
             if change_coins.balance() < (user_coins.balance() - self.get_price):
                 raise AmountDeducted
             print(change_coins.balance())
-            self._cart = []
-            user_coins.clear()
             return True, change_coins

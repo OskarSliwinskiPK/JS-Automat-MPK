@@ -18,12 +18,10 @@ class CoinAttributeError(Error):
 class NotEnoughMoney(Error):
     """ If someone pay too little. """
     def __init__(self):
-        super().__init__("Put in more money")
+        super().__init__("Niewystarczająca kwota")
 
 
 class AmountDeducted(Error):
     """ When there are no suitable coins in the machine. """
     def __init__(self):
         super().__init__("Tylko odliczona kwota")
-
-
