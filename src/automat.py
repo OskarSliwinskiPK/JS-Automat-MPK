@@ -1,7 +1,7 @@
 import random
-from mpk_exceptions import NotEnoughMoney, AmountDeducted
+from src.mpk_exceptions import NotEnoughMoney, AmountDeducted
 
-from coins import CoinStorage, Coin
+from src.coins import CoinStorage, Coin
 from enum import IntEnum
 
 

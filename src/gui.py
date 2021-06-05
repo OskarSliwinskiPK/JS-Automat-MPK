@@ -1,24 +1,27 @@
-from tkinter import Tk, Frame, Toplevel, PhotoImage, Button, Label, Spinbox, IntVar
+from tkinter import Frame, Toplevel, PhotoImage, Button, Label, Spinbox, IntVar, Tk
 import logging as log
 from tkinter.constants import *
-from mpk_exceptions import *
-from automat import Tickets
-from coins import *
+from src.mpk_exceptions import *
+from src.automat import Tickets
+from src.coins import *
 from tkinter import messagebox
 import os
 import sys
 
 
 class App:
-    def __init__(self, window, automat, user_wallet):
+    def __init__(self, automat, user_wallet):
         log.basicConfig(level=10, format="[%(levelname)s]: %(message)s", stream=sys.stdout)
-        self.window = window
-        # self.window = Tk()
+        self._user_cash = None
+        self._tickets_to_buy = None
+        self._charge = None
+        self.window = Tk()
         self.automat = automat
         self.user_wallet = user_wallet
         self.load_photo()
         self.main_window()
         self.prepare()
+        self.window.mainloop()
 
     def load_photo(self):
         self.photo_50 = PhotoImage(file=os.path.abspath("images/z50.png"))
@@ -114,55 +117,58 @@ class App:
         self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
 
     def pay(self):
-        try:
-            result, change = self.automat.pay(self.user_wallet)
-            if result:
-                if change == 0:
-                    messagebox.showinfo('Zakup udany', f"Wyliczona kwota!")
-                    log.info(f'Zakup udany. Wyliczona kwota!')
-                else:
-                    messagebox.showinfo('Zakup udany', f"Kupiono bilety!\nReszta: {change.balance()}\n"
-                                                       f"Zwrot: {self.automat.coins_returned(change)}")
-                    log.info(f'Zakup udany, Kupiono bilety!\nReszta: {change.balance()}\n'
-                             f'Zwrot: {self.automat.coins_returned(change)}')
+        if self._tickets_to_buy is not None and self._user_cash is not None:
+            try:
+                result, change = self.automat.pay(self.user_wallet)
+                if result:
+                    if change == 0:
+                        messagebox.showinfo('Zakup udany', f"Wyliczona kwota!")
+                        log.info(f'Zakup udany. Wyliczona kwota!')
+                    else:
+                        messagebox.showinfo('Zakup udany', f"Kupiono bilety!\nReszta: {change.balance()}\n"
+                                                           f"Zwrot: {self.automat.coins_returned(change)}")
+                        log.info(f'Zakup udany, Kupiono bilety!\nReszta: {change.balance()}\n'
+                                 f'Zwrot: {self.automat.coins_returned(change)}')
+                    self.user_wallet.clear()
+                    self.automat.clear_cart()
+                    self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
+                    self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
+                    user_balance = self.user_wallet.balance()
+                    self._user_cash.configure(text=user_balance.__str__())
+            except NotEnoughMoney as e:
+                messagebox.showerror('Błąd', e)
+                log.error(e)
+            except AmountDeducted as e:
+                returned = self.automat.coins_returned(self.user_wallet)
+                messagebox.showerror('Błąd', f'{e}\nZwrot: {returned}')
+                log.error(f'{e}\nZwrot: {returned}')
                 self.user_wallet.clear()
-                self.automat.clear_cart()
-                self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
-                self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
                 user_balance = self.user_wallet.balance()
                 self._user_cash.configure(text=user_balance.__str__())
-        except NotEnoughMoney as e:
-            messagebox.showerror('Błąd', e)
-            log.error(e)
-        except AmountDeducted as e:
-            returned = self.automat.coins_returned(self.user_wallet)
-            messagebox.showerror('Błąd', f'{e}\nZwrot: {returned}')
-            log.error(f'{e}\nZwrot: {returned}')
-            self.user_wallet.clear()
-            user_balance = self.user_wallet.balance()
-            self._user_cash.configure(text=user_balance.__str__())
 
     def return_money(self):
-        try:
-            user_balance = self.user_wallet.balance()
-            self._user_cash.configure(text=user_balance.__str__())
-            returned = self.user_wallet.coins_returned()
-            messagebox.showinfo('Zwrot', f"Zwrot monet: {returned}")
-            log.info(f'Zwrot, Zwrot monet: {returned}')
-        except Exception as e:
-            messagebox.showerror('Błąd', e)
-            log.error(e)
+        if self._user_cash is not None:
+            try:
+                user_balance = self.user_wallet.balance()
+                self._user_cash.configure(text=user_balance.__str__())
+                returned = self.user_wallet.coins_returned()
+                messagebox.showinfo('Zwrot', f"Zwrot monet: {returned}")
+                log.info(f'Zwrot, Zwrot monet: {returned}')
+            except Exception as e:
+                messagebox.showerror('Błąd', e)
+                log.error(e)
 
     def return_tickets(self):
-        try:
-            self.automat.clear_cart()
-            self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
-            self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
-            messagebox.showinfo('Usuwanie', f"Usunięto bilety z listy!")
-            log.info('Usuwanie, Usunięto bilety z listy!')
-        except Exception as e:
-            messagebox.showerror('Błąd', e)
-            log.error(e)
+        if self._tickets_to_buy is not None:
+            try:
+                self.automat.clear_cart()
+                self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
+                self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
+                messagebox.showinfo('Usuwanie', f"Usunięto bilety z listy!")
+                log.info('Usuwanie, Usunięto bilety z listy!')
+            except Exception as e:
+                messagebox.showerror('Błąd', e)
+                log.error(e)
 
     def main_window(self):
         mainframe = Frame(self.window)

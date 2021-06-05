@@ -1,5 +1,5 @@
 from decimal import *
-from mpk_exceptions import NotValidCoinValue, CoinAttributeError
+from src.mpk_exceptions import NotValidCoinValue, CoinAttributeError
 
 
 class Coin:

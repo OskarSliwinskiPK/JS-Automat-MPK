@@ -1,6 +1,6 @@
 from unittest import TestCase
-from coins import CoinStorage, Coin
-from mpk_exceptions import *
+from src.coins import CoinStorage, Coin
+from src.mpk_exceptions import *
 
 
 class TestCoin(TestCase):

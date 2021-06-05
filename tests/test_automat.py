@@ -1,7 +1,7 @@
 import unittest
-from automat import AutomatMpk, Tickets
-from coins import CoinStorage, Coin
-from mpk_exceptions import *
+from src.automat import AutomatMpk, Tickets
+from src.coins import CoinStorage, Coin
+from src.mpk_exceptions import *
 
 
 class TestAutomatMpk(unittest.TestCase):
