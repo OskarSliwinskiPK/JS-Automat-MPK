@@ -29,11 +29,11 @@ class Tickets(IntEnum):
 
 
 class AutomatMpk(CoinStorage):
-    _cart = []
-    _price = 0.0
 
     def __init__(self):
         super().__init__()
+        self._cart = []
+        self._price = 0.0
         self._coins = {key: random.randint(0, 5) for key in self._acceptable_values}
 
     def add_ticket(self, ticket, amount=1):
@@ -42,15 +42,16 @@ class AutomatMpk(CoinStorage):
                 self._cart.append((ticket, ticket.name))
 
     def add_coins(self, cash):
-        merge_coins = lambda x, y: {k: x.get(k, 0) + y.get(k, 0) for k in set(x)}
-        self._coins = merge_coins(self.get_coins, cash.get_coins)
+        if isinstance(cash, CoinStorage):
+            merge_coins = lambda x, y: {k: x.get(k, 0) + y.get(k, 0) for k in set(x)}
+            self._coins = merge_coins(self.get_coins, cash.get_coins)
 
     def return_money(self, coins):
         copy_user_coins = coins.get_coins
         coins.clear()
         return copy_user_coins
 
-    def clear(self):
+    def clear_cart(self):
         self._cart = []
 
     @property
@@ -60,7 +61,7 @@ class AutomatMpk(CoinStorage):
             result.append(item[1])
         return len(result)
 
-    def coins_returned(self, user_coins):
+    def coins_returned(self, user_coins=None):
         result = []
         for item, amount in user_coins.get_coins.items():
             if amount > 0:
@@ -77,13 +78,9 @@ class AutomatMpk(CoinStorage):
 
     def pay(self, user_coins):
         self.add_coins(user_coins)
-        print("Wrzucono: ", user_coins.balance())
-        print('Bilety w koszyku: ', self._cart)
-        print(f'Trzeba zapłacić: {self.get_price}')
         if user_coins.balance() < self.get_price:
             raise NotEnoughMoney
         elif user_coins.balance() == self.get_price:
-            print("Perfect!")
             self._cart = []
             return True, 0
         else:
@@ -96,9 +93,6 @@ class AutomatMpk(CoinStorage):
                     self._coins[coin] -= 1
                     amount -= 1
                     change = (change - coin).__round__(2)
-            print(f"Trzeba wydać resztę! {(user_coins.balance() - self.get_price).__round__(2)}")
-            print(f"Monety do zwrócenia: {change_coins.get_coins}")
-            if change_coins.balance() < (user_coins.balance() - self.get_price):
-                raise AmountDeducted
-            print(change_coins.balance())
+            if change_coins.balance() < (user_coins.balance() - self.get_price).__round__(2):
+                raise AmountDeducted(self.coins_returned(user_coins))
             return True, change_coins

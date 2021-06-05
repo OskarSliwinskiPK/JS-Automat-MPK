@@ -30,8 +30,11 @@ class CoinStorage:
 
     def add(self, coin, amount=1):
         if isinstance(coin, Coin):
-            for _ in range(amount):
-                self._coins[float(coin.get_value)] += 1
+            if isinstance(amount, int):
+                for _ in range(amount):
+                    self._coins[float(coin.get_value)] += 1
+            else:
+                raise ValueError()
         else:
             raise CoinAttributeError()
 
@@ -41,16 +44,17 @@ class CoinStorage:
     def return_money(self, coins):
         pass
 
+    def coins_returned(self, user_coins=None):
+        result = []
+        for item, amount in self.get_coins.items():
+            if amount > 0:
+                result.append(f'{item}x{amount}')
+        self.clear()
+        return result
+
     @property
     def get_coins(self):
         return self._coins
-
-    def remove(self, coin):
-        if isinstance(coin, Coin):
-            if coin.get_value in self._acceptable_values:
-                self._coins[coin.get_value] -= 1
-        else:
-            raise CoinAttributeError()
 
     def balance(self):
         return sum([key*value for key, value in self._coins.items()]).__round__(2)

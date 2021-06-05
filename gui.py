@@ -1,37 +1,38 @@
 from tkinter import Tk, Frame, Toplevel, PhotoImage, Button, Label, Spinbox, IntVar
+import logging as log
 from tkinter.constants import *
 from mpk_exceptions import *
 from automat import Tickets
 from coins import *
 from tkinter import messagebox
+import os
+import sys
 
 
 class App:
-    def __init__(self, automat, user_wallet):
-        self.window = Tk()
+    def __init__(self, window, automat, user_wallet):
+        log.basicConfig(level=10, format="[%(levelname)s]: %(message)s", stream=sys.stdout)
+        self.window = window
+        # self.window = Tk()
         self.automat = automat
         self.user_wallet = user_wallet
         self.load_photo()
         self.main_window()
         self.prepare()
-        self.window.mainloop()
-        self._tickets_to_buy = None
-        self._charge = None
-        self._user_cash = None
 
     def load_photo(self):
-        self.photo_50 = PhotoImage(file="images/z50.png")
-        self.photo_20 = PhotoImage(file="images/z20.png")
-        self.photo_10 = PhotoImage(file="images/z10.png")
-        self.photo_5 = PhotoImage(file="images/z5.png")
-        self.photo_2 = PhotoImage(file="images/z2.png")
-        self.photo_1 = PhotoImage(file="images/z1.png")
-        self.photo_050 = PhotoImage(file="images/g50.png")
-        self.photo_020 = PhotoImage(file="images/g20.png")
-        self.photo_010 = PhotoImage(file="images/g10.png")
-        self.photo_005 = PhotoImage(file="images/g5.png")
-        self.photo_002 = PhotoImage(file="images/g2.png")
-        self.photo_001 = PhotoImage(file="images/g1.png")
+        self.photo_50 = PhotoImage(file=os.path.abspath("images/z50.png"))
+        self.photo_20 = PhotoImage(file=os.path.abspath("images/z20.png"))
+        self.photo_10 = PhotoImage(file=os.path.abspath("images/z10.png"))
+        self.photo_5 = PhotoImage(file=os.path.abspath("images/z5.png"))
+        self.photo_2 = PhotoImage(file=os.path.abspath("images/z2.png"))
+        self.photo_1 = PhotoImage(file=os.path.abspath("images/z1.png"))
+        self.photo_050 = PhotoImage(file=os.path.abspath("images/g50.png"))
+        self.photo_020 = PhotoImage(file=os.path.abspath("images/g20.png"))
+        self.photo_010 = PhotoImage(file=os.path.abspath("images/g10.png"))
+        self.photo_005 = PhotoImage(file=os.path.abspath("images/g5.png"))
+        self.photo_002 = PhotoImage(file=os.path.abspath("images/g2.png"))
+        self.photo_001 = PhotoImage(file=os.path.abspath("images/g1.png"))
 
     def prepare(self):
         self.window.update_idletasks()
@@ -40,6 +41,7 @@ class App:
         x = (self.window.winfo_screenwidth() // 2) - (width // 2)
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
         self.window.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        self.window.title("Automat biletowy MPK")
 
     def new_window(self):
         wallet_window = Toplevel()
@@ -117,45 +119,57 @@ class App:
             if result:
                 if change == 0:
                     messagebox.showinfo('Zakup udany', f"Wyliczona kwota!")
+                    log.info(f'Zakup udany. Wyliczona kwota!')
                 else:
                     messagebox.showinfo('Zakup udany', f"Kupiono bilety!\nReszta: {change.balance()}\n"
-                                                       f"Zwrot: {self.automat.coins_returned(self.user_wallet)}")
+                                                       f"Zwrot: {self.automat.coins_returned(change)}")
+                    log.info(f'Zakup udany, Kupiono bilety!\nReszta: {change.balance()}\n'
+                             f'Zwrot: {self.automat.coins_returned(change)}')
                 self.user_wallet.clear()
-                self.automat.clear()
+                self.automat.clear_cart()
                 self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
                 self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
                 user_balance = self.user_wallet.balance()
                 self._user_cash.configure(text=user_balance.__str__())
         except NotEnoughMoney as e:
             messagebox.showerror('Błąd', e)
+            log.error(e)
         except AmountDeducted as e:
-            messagebox.showerror('Błąd', f'{e}\nZwrot: {self.automat.coins_returned(self.user_wallet)}')
+            returned = self.automat.coins_returned(self.user_wallet)
+            messagebox.showerror('Błąd', f'{e}\nZwrot: {returned}')
+            log.error(f'{e}\nZwrot: {returned}')
             self.user_wallet.clear()
             user_balance = self.user_wallet.balance()
             self._user_cash.configure(text=user_balance.__str__())
 
     def return_money(self):
         try:
-            self.automat.return_money(self.user_wallet)
             user_balance = self.user_wallet.balance()
             self._user_cash.configure(text=user_balance.__str__())
-            messagebox.showinfo('Zwrot', f"Zwrot monet!")
+            returned = self.user_wallet.coins_returned()
+            messagebox.showinfo('Zwrot', f"Zwrot monet: {returned}")
+            log.info(f'Zwrot, Zwrot monet: {returned}')
         except Exception as e:
             messagebox.showerror('Błąd', e)
+            log.error(e)
 
     def return_tickets(self):
         try:
-            self.automat.clear()
+            self.automat.clear_cart()
             self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
             self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
             messagebox.showinfo('Usuwanie', f"Usunięto bilety z listy!")
+            log.info('Usuwanie, Usunięto bilety z listy!')
         except Exception as e:
             messagebox.showerror('Błąd', e)
+            log.error(e)
 
     def main_window(self):
         mainframe = Frame(self.window)
         mainframe.grid(column=3, row=1, sticky=(N, W, E, S))
-        self.window.title("Automat biletowy MPK")
+        self._tickets_to_buy = Label(mainframe, text=f"Lączna liczba biletów:\n{self.automat.tickets}", height=4,
+                                     width=20, foreground="RED")
+        self._tickets_to_buy.grid(column=0, row=4)
         Button(mainframe, text="Bilet normalny 20 min\n2,80zł", height=4, width=20, bg="gray65",
                command=lambda: self.ticket(Tickets.NORMAL_20, number_of_tickets.get())).grid(column=0, row=0)
         Button(mainframe, text="Bilet ulgowy 20 min\n1,40zł", height=4, width=20, bg="gray65",
@@ -187,6 +201,3 @@ class App:
         self._charge = Label(mainframe, text=f"Należność:\n{self.automat.get_price}", height=4, width=20,
                              foreground="RED")
         self._charge.grid(column=2, row=4)
-        self._tickets_to_buy = Label(mainframe, text=f"Lączna liczba biletów:\n{self.automat.tickets}", height=4,
-                                     width=20, foreground="RED")
-        self._tickets_to_buy.grid(column=0, row=4)

@@ -23,5 +23,6 @@ class NotEnoughMoney(Error):
 
 class AmountDeducted(Error):
     """ When there are no suitable coins in the machine. """
-    def __init__(self):
+    def __init__(self, value):
         super().__init__("Tylko odliczona kwota")
+        self._value = value
