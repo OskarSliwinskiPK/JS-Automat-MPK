@@ -10,6 +10,7 @@ import sys
 
 
 class App:
+    """ Klasa odpowiedzialna za interfejs. """
     def __init__(self, automat, user_wallet):
         log.basicConfig(level=10, format="[%(levelname)s]: %(message)s", stream=sys.stdout)
         self._user_cash = None
@@ -24,6 +25,10 @@ class App:
         self.window.mainloop()
 
     def load_photo(self):
+        """
+        Odczytuje zdjęcia i zapisuje do zmiennych.
+        Funkcja jest wywołana w __init__, więc wykonuję się tylko raz.
+        """
         self.photo_50 = PhotoImage(file=os.path.abspath("images/z50.png"))
         self.photo_20 = PhotoImage(file=os.path.abspath("images/z20.png"))
         self.photo_10 = PhotoImage(file=os.path.abspath("images/z10.png"))
@@ -38,6 +43,7 @@ class App:
         self.photo_001 = PhotoImage(file=os.path.abspath("images/g1.png"))
 
     def prepare(self):
+        """ Ustawia wielkość okna i tytuł. """
         self.window.update_idletasks()
         width = self.window.winfo_width()
         height = self.window.winfo_height()
@@ -46,7 +52,8 @@ class App:
         self.window.geometry('{}x{}+{}+{}'.format(width, height, x, y))
         self.window.title("Automat biletowy MPK")
 
-    def new_window(self):
+    def coins_window(self):
+        """ Okno z wyborem wrzucanych monet. """
         wallet_window = Toplevel()
         wallet_window.resizable(0, 0)
         wallet_window.title("Portfel")
@@ -107,16 +114,27 @@ class App:
         self._user_cash.pack(anchor=N)
 
     def balance(self, value, amount):
+        """
+        Funkcja dodająca Monetę i odświeżająca wyświetlaną kwotę wrzuconą przez użytkownika.
+        :param value: nominał
+        :param amount: liczba monet
+        """
         self.user_wallet.add(Coin(value), int(amount))
         user_balance = self.user_wallet.balance()
         self._user_cash.configure(text=user_balance.__str__())
 
     def ticket(self, ticket, amount):
+        """
+        Funkcja dodająca bilet do listy i odświeżająca łączną liczbę biletów wybranych przez użytkownika.
+        :param ticket: bilet
+        :param amount: liczba monet
+        """
         self.automat.add_ticket(ticket, int(amount))
         self._tickets_to_buy.configure(text=f"Lączna liczba biletów: {self.automat.tickets}")
         self._charge.configure(text=f"Należność:\n{self.automat.get_price}")
 
     def pay(self):
+        """ Funkcja obsługująca przycisk KUP BILETY. """
         if self._tickets_to_buy is not None and self._user_cash is not None:
             try:
                 result, change = self.automat.pay(self.user_wallet)
@@ -147,6 +165,7 @@ class App:
                 self._user_cash.configure(text=user_balance.__str__())
 
     def return_money(self):
+        """ Funkcja obsługująca przycisk ZWRÓĆ PIENIĄDZE. """
         if self._user_cash is not None:
             try:
                 user_balance = self.user_wallet.balance()
@@ -159,6 +178,7 @@ class App:
                 log.error(e)
 
     def return_tickets(self):
+        """ Funkcja obsługująca przycisk USUŃ BILETY. """
         if self._tickets_to_buy is not None:
             try:
                 self.automat.clear_cart()
@@ -171,6 +191,7 @@ class App:
                 log.error(e)
 
     def main_window(self):
+        """ Główne okno programu z wyborem biletów do kupienia. """
         mainframe = Frame(self.window)
         mainframe.grid(column=3, row=1, sticky=(N, W, E, S))
         self._tickets_to_buy = Label(mainframe, text=f"Lączna liczba biletów:\n{self.automat.tickets}", height=4,
@@ -202,7 +223,7 @@ class App:
                command=lambda: self.pay()).grid(column=2, row=2)
 
         Button(mainframe, text="PORTFEL", height=4, width=20, bg="gray65", foreground="RED",
-               command=self.new_window).grid(column=1, row=4)
+               command=self.coins_window).grid(column=1, row=4)
 
         self._charge = Label(mainframe, text=f"Należność:\n{self.automat.get_price}", height=4, width=20,
                              foreground="RED")
